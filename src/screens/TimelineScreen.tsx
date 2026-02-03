@@ -1,4 +1,5 @@
-﻿import { useRouter } from 'expo-router';
+﻿import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
@@ -7,6 +8,7 @@ import TopBar from '@/src/components/TopBar';
 import JourneyHeader from '@/src/components/JourneyHeader';
 import TimelineCard, { type TimelineCardItem } from '@/src/components/TimelineCard';
 import SettingsMenu from '@/src/components/SettingsMenu';
+import SignalWarningSheet from '@/src/components/SignalWarningSheet';
 import { useDayRecords } from '@/src/context/day-records-context';
 import type { BirdState as ModelBirdState } from '@/src/models/bird-state';
 import type { BirdState as VisualBirdState } from '@/src/components/BirdCharacter';
@@ -145,6 +147,7 @@ export default function TimelineScreen() {
   const [riskTargetId, setRiskTargetId] = useState<string | null>(null);
   const [warningTarget, setWarningTarget] = useState<TimelineCardItem | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [warningOpen, setWarningOpen] = useState(false);
   const todayKey = useMemo(() => getSeoulDateKey(), []);
 
   const sortedRecords = useMemo(
@@ -188,6 +191,23 @@ export default function TimelineScreen() {
   }, [items]);
 
   const stageIndex = useMemo(() => deriveStage(recentTags, items.length), [recentTags, items.length]);
+
+  const last7Count = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
+    return sortedRecords.filter((record) => {
+      const date = new Date(record.date + 'T00:00:00');
+      const hasSignal = Object.values(record.flags).some(Boolean);
+      return hasSignal && date >= cutoff;
+    }).length;
+  }, [sortedRecords]);
+
+  const highSignalToday = useMemo(() => {
+    const today = sortedRecords[0];
+    if (!today) return false;
+    const count = Object.values(today.flags).filter(Boolean).length;
+    return today.flags.moneyRequest || count >= 2;
+  }, [sortedRecords]);
 
   useEffect(() => {
     const candidate = records.find(
@@ -246,6 +266,18 @@ export default function TimelineScreen() {
 
             <JourneyHeader activeIndex={stageIndex} birdState="healthy" onRewindPress={() => { /* TODO: rewind modal */ }} />
 
+            <Pressable style={styles.warningButton} onPress={() => setWarningOpen(true)} accessibilityRole="button">
+              <View style={styles.warningButtonLeft}>
+                <Ionicons name="alert-circle" size={16} color="#6c5f56" />
+                <Text style={styles.warningButtonText}>주의 흐름 살펴보기</Text>
+              </View>
+              <View style={styles.warningBadge}>
+                <Text style={styles.warningBadgeText}>
+                  {highSignalToday ? '오늘 강한 신호' : `최근 7일 ${last7Count}개 신호`}
+                </Text>
+              </View>
+            </Pressable>
+
             <FilterChips selected={filter} onSelect={setFilter} />
           </View>
         }
@@ -302,6 +334,8 @@ export default function TimelineScreen() {
       ) : null}
 
       <SettingsMenu visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      <SignalWarningSheet visible={warningOpen} records={sortedRecords} onClose={() => setWarningOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -327,6 +361,35 @@ const styles = StyleSheet.create({
   headerWrap: {
     gap: 16,
     paddingBottom: 8,
+  },
+  warningButton: {
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  warningButtonLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  warningButtonText: {
+    fontSize: 13,
+    color: '#5d4e45',
+    fontWeight: '600',
+  },
+  warningBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(215, 191, 176, 0.5)',
+  },
+  warningBadgeText: {
+    fontSize: 11,
+    color: '#6d5f55',
   },
   headerTop: {
     flexDirection: 'row',
@@ -414,5 +477,6 @@ const styles = StyleSheet.create({
     color: '#7b6c62',
   },
 });
+
 
 
