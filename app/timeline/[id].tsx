@@ -1,26 +1,29 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import {
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { useDayRecords } from "@/src/context/day-records-context";
+import { useDayRecords } from '@/src/context/day-records-context';
 
 const FLAG_ROWS = [
-  { key: "moneyRequest", label: "Í∏àÏ†Ñ Í¥ÄÎ†® ÌëúÌòÑ" },
-  { key: "favorRequest", label: "Î∂ÄÌÉÅ/ÎèÑÏõÄ ÏöîÏ≤≠" },
-  { key: "excessivePraise", label: "Í≥ºÌïú Ïπ≠Ï∞¨/ÏùòÏ°¥" },
-  { key: "linkIncluded", label: "Ïô∏Î∂Ä ÎßÅÌÅ¨ Ìè¨Ìï®" },
-  { key: "imageIncluded", label: "Ïù¥ÎØ∏ÏßÄ Ìè¨Ìï®" },
+  { key: 'moneyRequest', label: '±›¿¸ ∞¸∑√ «•«ˆ' },
+  { key: 'favorRequest', label: '∫Œ≈π/µµøÚ ø‰√ª' },
+  { key: 'excessivePraise', label: '∞˙«— ƒ™¬˘/¿«¡∏' },
+  { key: 'linkIncluded', label: 'ø‹∫Œ ∏µ≈© ∆˜«‘' },
+  { key: 'imageIncluded', label: '¿ÃπÃ¡ˆ ∆˜«‘' },
 ] as const;
 
 function formatDate(date: string) {
-  return date.replace(/-/g, ".");
+  return date.replace(/-/g, '.');
+}
+
+function buildTags(flags: Record<string, boolean>) {
+  const tags: string[] = [];
+  if (flags.moneyRequest) tags.push('#±›¿¸æ±ﬁ');
+  if (flags.favorRequest) tags.push('#∫Œ¥„∞®¡∂º∫');
+  if (flags.excessivePraise) tags.push('#Ω≈∑⁄∞≠¡∂');
+  if (flags.linkIncluded) tags.push('#∏µ≈©∆˜«‘');
+  if (flags.imageIncluded) tags.push('#¿ÃπÃ¡ˆ∆˜«‘');
+  return tags.length > 0 ? tags : ['#¿œªÛ¥Î»≠'];
 }
 
 export default function TimelineDetailScreen() {
@@ -31,21 +34,23 @@ export default function TimelineDetailScreen() {
 
   const record = useMemo(
     () => records.find((item) => item.id === id),
-    [records, id],
+    [records, id]
   );
 
   const nativeSentences = record?.nativeSentences ?? [];
   const translate = (sentence: string, index: number) => {
     if (nativeSentences[index]) return nativeSentences[index];
-    return "(Î≤àÏó≠ Ï§ÄÎπÑÏ§ë)";
+    return '(π¯ø™ ¡ÿ∫Ò¡ﬂ)';
   };
+
+  const tags = useMemo(() => (record ? buildTags(record.flags) : []), [record]);
 
   const riskLabels = useMemo(() => {
     if (!record?.immediateRisk) return [];
     return [
-      record.immediateRisk.scamUrl ? "Ïã†Í≥†Îêú ÎßÅÌÅ¨" : null,
-      record.immediateRisk.reportedAccount ? "Ïã†Í≥†Îêú Í≥ÑÏ¢å" : null,
-      record.immediateRisk.aiImage ? "Ìï©ÏÑ± Ïù¥ÎØ∏ÏßÄ" : null,
+      record.immediateRisk.scamUrl ? 'Ω≈∞Ìµ» ∏µ≈©' : null,
+      record.immediateRisk.reportedAccount ? 'Ω≈∞Ìµ» ∞Ë¡¬' : null,
+      record.immediateRisk.aiImage ? '«’º∫ ¿ÃπÃ¡ˆ' : null,
     ].filter(Boolean) as string[];
   }, [record]);
 
@@ -74,16 +79,16 @@ export default function TimelineDetailScreen() {
       await markImmediateRiskShown(record.date);
     }
     setShowOverlay(false);
-    router.push("/(tabs)/profile/report");
+    router.push('/(tabs)/profile/report');
   };
 
   if (!record) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>Ìï¥Îãπ ÎÇ†ÏßúÏùò Í∏∞Î°ùÏù¥ ÏóÜÏñ¥Ïöî.</Text>
+          <Text style={styles.emptyTitle}>«ÿ¥Á ≥Ø¬•¿« ±‚∑œ¿Ã æ¯æÓø‰</Text>
           <Pressable style={styles.homeButton} onPress={() => router.back()}>
-            <Text style={styles.homeButtonText}>Îí§Î°ú</Text>
+            <Text style={styles.homeButtonText}>µ⁄∑Œ</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -92,39 +97,43 @@ export default function TimelineDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>Îí§Î°ú</Text>
+          <Text style={styles.backText}>µ⁄∑Œ</Text>
         </Pressable>
 
         <Text style={styles.title}>{formatDate(record.date)}</Text>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ïò§ÎäòÏùò Î¨∏Ïû•</Text>
+          <Text style={styles.sectionTitle}>ø¿¥√¿« πÆ¿Â</Text>
           <View style={styles.cards}>
             {record.extractedSentences.map((sentence, index) => (
               <View key={`${sentence}-${index}`} style={styles.card}>
                 <Text style={styles.cardKorean}>{sentence}</Text>
-                <Text style={styles.cardNative}>
-                  {translate(sentence, index)}
-                </Text>
+                <Text style={styles.cardNative}>{translate(sentence, index)}</Text>
               </View>
             ))}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ïò§ÎäòÏùò Ï≤¥ÌÅ¨</Text>
+          <Text style={styles.sectionTitle}>ø¿¥√¿« ≈¬±◊</Text>
+          <View style={styles.tagRow}>
+            {tags.map((tag) => (
+              <View key={tag} style={styles.tagChip}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ø¿¥√¿« √º≈©</Text>
           <View style={styles.flags}>
             {FLAG_ROWS.map((flag) => (
               <View key={flag.key} style={styles.flagRow}>
                 <Text style={styles.flagLabel}>{flag.label}</Text>
-                <Text style={styles.flagValue}>
-                  {record.flags[flag.key] ? "ÏûàÏùå" : "ÏóÜÏùå"}
-                </Text>
+                <Text style={styles.flagValue}>{record.flags[flag.key] ? '¿÷¿Ω' : 'æ¯¿Ω'}</Text>
               </View>
             ))}
           </View>
@@ -132,28 +141,29 @@ export default function TimelineDetailScreen() {
 
         {record.immediateRisk && riskLabels.length > 0 ? (
           <View style={styles.riskBox}>
-            <Text style={styles.riskTitle}>Ïù¥ÎØ∏ Ïã†Í≥†Îêú Ï†ïÎ≥¥</Text>
+            <Text style={styles.riskTitle}>¿ÃπÃ Ω≈∞Ìµ» ¡§∫∏</Text>
             {riskLabels.map((label) => (
               <Text key={label} style={styles.riskItem}>
                 {label}
               </Text>
             ))}
-            <Pressable
-              style={styles.riskButton}
-              onPress={() => router.push("/(tabs)/profile/report")}
-            >
-              <Text style={styles.riskButtonText}>ReportÎ°ú Ïù¥Îèô</Text>
+            <Pressable style={styles.riskButton} onPress={() => router.push('/(tabs)/profile/report')}>
+              <Text style={styles.riskButtonText}>Report∑Œ ¿Ãµø</Text>
             </Pressable>
           </View>
         ) : null}
       </ScrollView>
 
+      <View style={styles.footer}>
+        <Pressable style={styles.ctaButton} onPress={() => router.push('/(tabs)/profile')}>
+          <Text style={styles.ctaText}>µµøÚ¿Ã « ø‰«“±Óø‰?</Text>
+        </Pressable>
+      </View>
+
       {showOverlay ? (
         <View style={styles.overlay}>
           <View style={styles.overlayCard}>
-            <Text style={styles.overlayTitle}>
-              Ïù¥ÎØ∏ Ïã†Í≥†Îêú ÏÇ¨Í∏∞ Ï†ïÎ≥¥ÏûÖÎãàÎã§.
-            </Text>
+            <Text style={styles.overlayTitle}>¿ÃπÃ Ω≈∞Ìµ» ªÁ±‚ ¡§∫∏¿‘¥œ¥Ÿ.</Text>
             <View style={styles.overlayList}>
               {riskLabels.map((label) => (
                 <Text key={label} style={styles.overlayItem}>
@@ -162,17 +172,11 @@ export default function TimelineDetailScreen() {
               ))}
             </View>
             <View style={styles.overlayActions}>
-              <Pressable
-                style={styles.overlayButtonGhost}
-                onPress={() => void handleDismiss()}
-              >
-                <Text style={styles.overlayGhostText}>Îã´Í∏∞</Text>
+              <Pressable style={styles.overlayButtonGhost} onPress={() => void handleDismiss()}>
+                <Text style={styles.overlayGhostText}>¥›±‚</Text>
               </Pressable>
-              <Pressable
-                style={styles.overlayButton}
-                onPress={() => void handleReport()}
-              >
-                <Text style={styles.overlayButtonText}>ReportÎ°ú Ïù¥Îèô</Text>
+              <Pressable style={styles.overlayButton} onPress={() => void handleReport()}>
+                <Text style={styles.overlayButtonText}>Report∑Œ ¿Ãµø</Text>
               </Pressable>
             </View>
           </View>
@@ -185,27 +189,28 @@ export default function TimelineDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8f0eb",
+    backgroundColor: '#f8f0eb',
   },
   container: {
     padding: 16,
+    paddingBottom: 120,
     gap: 14,
   },
   backButton: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
   },
   backText: {
     fontSize: 12,
-    color: "#7b6c62",
+    color: '#7b6c62',
   },
   title: {
     fontSize: 26,
-    fontWeight: "700",
-    color: "#5f5147",
+    fontWeight: '700',
+    color: '#5f5147',
     marginBottom: 4,
   },
   section: {
@@ -213,108 +218,141 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#6e5f54",
+    fontWeight: '600',
+    color: '#6e5f54',
   },
   cards: {
     gap: 12,
   },
   card: {
     borderRadius: 18,
-    backgroundColor: "#f7eeea",
+    backgroundColor: '#f7eeea',
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
   cardKorean: {
     fontSize: 16,
     lineHeight: 22,
-    color: "#5c4e44",
+    color: '#5c4e44',
     marginBottom: 8,
   },
   cardNative: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#7b6c62",
+    color: '#7b6c62',
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tagChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#7b6c62',
   },
   flags: {
     gap: 6,
     borderRadius: 16,
-    backgroundColor: "#f7eeea",
+    backgroundColor: '#f7eeea',
     padding: 14,
   },
   flagRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   flagLabel: {
     fontSize: 13,
-    color: "#7b6c62",
+    color: '#7b6c62',
   },
   flagValue: {
     fontSize: 13,
-    color: "#5c4e44",
+    color: '#5c4e44',
   },
   riskBox: {
     borderRadius: 16,
-    backgroundColor: "#f7eeea",
+    backgroundColor: '#f7eeea',
     padding: 14,
     gap: 6,
   },
   riskTitle: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#6e5f54",
+    fontWeight: '600',
+    color: '#6e5f54',
   },
   riskItem: {
     fontSize: 13,
-    color: "#7b6c62",
+    color: '#7b6c62',
   },
   riskButton: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     marginTop: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: "rgba(232, 202, 191, 0.9)",
+    backgroundColor: 'rgba(232, 202, 191, 0.9)',
   },
   riskButtonText: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#5d4e45",
+    fontWeight: '600',
+    color: '#5d4e45',
+  },
+  footer: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 24,
+  },
+  ctaButton: {
+    height: 52,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(232, 202, 191, 0.9)',
+  },
+  ctaText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#5d4e45',
   },
   overlay: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(50, 40, 32, 0.18)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: 'rgba(50, 40, 32, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 20,
   },
   overlayCard: {
-    width: "100%",
+    width: '100%',
     borderRadius: 20,
-    backgroundColor: "#f7eeea",
+    backgroundColor: '#f7eeea',
     padding: 18,
     gap: 10,
   },
   overlayTitle: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#5c4e44",
+    fontWeight: '700',
+    color: '#5c4e44',
   },
   overlayList: {
     gap: 6,
   },
   overlayItem: {
     fontSize: 13,
-    color: "#7b6c62",
+    color: '#7b6c62',
   },
   overlayActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     gap: 10,
     marginTop: 6,
   },
@@ -322,44 +360,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: "rgba(232, 202, 191, 0.9)",
+    backgroundColor: 'rgba(232, 202, 191, 0.9)',
   },
   overlayButtonText: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#5d4e45",
+    fontWeight: '600',
+    color: '#5d4e45',
   },
   overlayButtonGhost: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
   overlayGhostText: {
     fontSize: 13,
-    color: "#7b6c62",
+    color: '#7b6c62',
   },
   emptyWrap: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 24,
     gap: 12,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#5f5147",
+    fontWeight: '600',
+    color: '#5f5147',
   },
   homeButton: {
     marginTop: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 14,
-    backgroundColor: "rgba(232, 202, 191, 0.9)",
+    backgroundColor: 'rgba(232, 202, 191, 0.9)',
   },
   homeButtonText: {
     fontSize: 13,
-    color: "#5d4e45",
+    color: '#5d4e45',
   },
 });

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+﻿import React from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export type FilterKey = 'all' | 'money' | 'favor' | 'praise' | 'link' | 'image';
 
@@ -19,37 +19,55 @@ type FilterChipsProps = {
 
 export default function FilterChips({ selected, onSelect }: FilterChipsProps) {
   return (
-    <View style={styles.row}>
-      {(Object.keys(CHIP_LABELS) as FilterKey[]).map((key) => (
-        <Pressable
-          key={key}
-          style={[styles.chip, selected === key ? styles.chipActive : styles.chipInactive]}
-          onPress={() => onSelect(key)}>
-          <Text style={[styles.chipText, selected === key ? styles.chipTextActive : styles.chipTextInactive]}>
-            {CHIP_LABELS[key]}
-          </Text>
-        </Pressable>
-      ))}
+    <View style={styles.wrap}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+      >
+        {(Object.keys(CHIP_LABELS) as FilterKey[]).map((key) => {
+          const isActive = selected === key;
+          return (
+            <Pressable
+              key={key}
+              style={[styles.chip, isActive ? styles.chipActive : styles.chipInactive]}
+              onPress={() => onSelect(key)}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.chipText, isActive ? styles.chipTextActive : styles.chipTextInactive]}>
+                {CHIP_LABELS[key]}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    width: '100%',
+  },
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    paddingVertical: 2,
+    paddingRight: 8,
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
+    minHeight: 32,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipActive: {
     backgroundColor: 'rgba(232, 202, 191, 0.9)',
   },
   chipInactive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderWidth: 1,
+    borderColor: 'rgba(210, 190, 175, 0.6)',
   },
   chipText: {
     fontSize: 12,

@@ -1,8 +1,9 @@
-import * as ImagePicker from 'expo-image-picker';
+﻿import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useProfile } from '@/src/context/profile-context';
+import TopBar from '@/src/components/TopBar';
 import type { Profile } from '@/src/models/profile';
 
 const emptyProfile: Profile = {
@@ -47,8 +48,10 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <TopBar />
+
         <Text style={styles.title}>프로필</Text>
-        <Text style={styles.subtitle}>상대의 정보를 차분히 기록해둘 수 있어요.</Text>
+        <Text style={styles.subtitle}>상대의 정보를 차분히 기록해두세요.</Text>
 
         <View style={styles.photoRow}>
           <View style={styles.photoCircle}>
@@ -111,7 +114,7 @@ export default function ProfileScreen() {
           <Text style={styles.label}>어떻게 만났나요?</Text>
           <TextInput
             style={[styles.input, styles.inputMultiline]}
-            placeholder="예: 여행 중, 커뮤니티, 지인 소개"
+            placeholder="예: 여행 중 커뮤니티, 지인 소개"
             placeholderTextColor="#b1a39a"
             value={draft.howWeMet}
             onChangeText={(value) => updateField('howWeMet', value)}
@@ -139,6 +142,27 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 14,
+  },
+  topBar: {
+    height: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  topSpacer: {
+    flex: 1,
+  },
+  iconRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
   },
   title: {
     fontSize: 28,
@@ -224,3 +248,5 @@ const styles = StyleSheet.create({
     color: '#5d4e45',
   },
 });
+
+

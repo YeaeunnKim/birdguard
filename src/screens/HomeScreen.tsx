@@ -1,5 +1,4 @@
-﻿import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
+﻿import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -17,6 +16,7 @@ import {
 
 import BirdCharacter, { type BirdState } from '@/src/components/BirdCharacter';
 import Nest from '@/src/components/Nest';
+import TopBar from '@/src/components/TopBar';
 import { useDayRecords } from '@/src/context/day-records-context';
 import type { BirdState as ModelBirdState } from '@/src/models/bird-state';
 import { getSeoulDateKey } from '@/src/utils/date';
@@ -373,14 +373,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         scrollEnabled={!(feedReady && !feedConsumed)}>
         <View style={styles.roomLayer}>
-          <View style={styles.topBar}>
-            <Pressable style={styles.iconButton} accessibilityRole="button">
-              <Ionicons name="settings-outline" size={20} color="#7b6e64" />
-            </Pressable>
-            <Pressable style={styles.iconButton} accessibilityRole="button">
-              <Ionicons name="notifications-outline" size={20} color="#7b6e64" />
-            </Pressable>
-          </View>
+          <TopBar style={styles.topBarAdjust} />
 
           <Pressable
             style={styles.heroArea}
@@ -536,6 +529,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 10,
+  },
+  topBarAdjust: {
+    marginHorizontal: -14,
   },
   iconButton: {
     width: 34,
@@ -740,4 +736,6 @@ const styles = StyleSheet.create({
     width: 78,
   },
 });
+
+
 
