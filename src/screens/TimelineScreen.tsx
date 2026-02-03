@@ -6,6 +6,7 @@ import FilterChips, { type FilterKey } from '@/src/components/FilterChips';
 import TopBar from '@/src/components/TopBar';
 import JourneyHeader from '@/src/components/JourneyHeader';
 import TimelineCard, { type TimelineCardItem } from '@/src/components/TimelineCard';
+import SettingsMenu from '@/src/components/SettingsMenu';
 import { useDayRecords } from '@/src/context/day-records-context';
 import type { BirdState as ModelBirdState } from '@/src/models/bird-state';
 import type { BirdState as VisualBirdState } from '@/src/components/BirdCharacter';
@@ -143,6 +144,7 @@ export default function TimelineScreen() {
   const [filter, setFilter] = useState<FilterKey>('all');
   const [riskTargetId, setRiskTargetId] = useState<string | null>(null);
   const [warningTarget, setWarningTarget] = useState<TimelineCardItem | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const todayKey = useMemo(() => getSeoulDateKey(), []);
 
   const sortedRecords = useMemo(
@@ -240,7 +242,7 @@ export default function TimelineScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerWrap}>
-            <TopBar title="타임라인" />
+            <TopBar title="타임라인" onPressSettings={() => setSettingsOpen(true)} />
 
             <JourneyHeader activeIndex={stageIndex} birdState="healthy" onRewindPress={() => { /* TODO: rewind modal */ }} />
 
@@ -298,6 +300,8 @@ export default function TimelineScreen() {
           </View>
         </View>
       ) : null}
+
+      <SettingsMenu visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </SafeAreaView>
   );
 }

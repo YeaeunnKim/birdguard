@@ -5,18 +5,26 @@ import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 type TopBarProps = {
   title?: string;
   style?: ViewStyle;
+  onPressSettings?: () => void;
+  onPressNotifications?: () => void;
 };
 
-export default function TopBar({ title, style }: TopBarProps) {
+export default function TopBar({ title, style, onPressSettings, onPressNotifications }: TopBarProps) {
   return (
     <View style={[styles.container, style]}>
       <View style={styles.sideSpacer} />
       <Text style={styles.title}>{title ?? ''}</Text>
       <View style={styles.iconRow}>
-        <Pressable style={styles.iconButton} accessibilityRole="button">
+        <Pressable
+          style={styles.iconButton}
+          accessibilityRole="button"
+          onPress={onPressNotifications}>
           <Ionicons name="notifications-outline" size={20} color="#7b6e64" />
         </Pressable>
-        <Pressable style={styles.iconButton} accessibilityRole="button">
+        <Pressable
+          style={styles.iconButton}
+          accessibilityRole="button"
+          onPress={onPressSettings}>
           <Ionicons name="settings-outline" size={20} color="#7b6e64" />
         </Pressable>
       </View>

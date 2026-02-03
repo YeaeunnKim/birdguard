@@ -1,9 +1,10 @@
 ﻿import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { useProfile } from '@/src/context/profile-context';
 import TopBar from '@/src/components/TopBar';
+import SettingsMenu from '@/src/components/SettingsMenu';
+import { useProfile } from '@/src/context/profile-context';
 import type { Profile } from '@/src/models/profile';
 
 const emptyProfile: Profile = {
@@ -18,6 +19,8 @@ const emptyProfile: Profile = {
 export default function ProfileScreen() {
   const { profile, updateProfile } = useProfile();
   const [draft, setDraft] = useState<Profile>(emptyProfile);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -25,12 +28,32 @@ export default function ProfileScreen() {
     }
   }, [profile]);
 
-  const updateField = (key: keyof Profile, value: string) => {
-    setDraft((prev) => ({ ...prev, [key]: value }));
-  };
+  const queueSave = useCallback(
+    (next: Profile) => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+      }
+      saveTimer.current = setTimeout(() => {
+        void updateProfile(next);
+      }, 400);
+    },
+    [updateProfile]
+  );
 
-  const handleSave = async () => {
-    await updateProfile(draft);
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+      }
+    };
+  }, []);
+
+  const updateField = (key: keyof Profile, value: string) => {
+    setDraft((prev) => {
+      const next = { ...prev, [key]: value };
+      queueSave(next);
+      return next;
+    });
   };
 
   const pickImage = async () => {
@@ -41,14 +64,18 @@ export default function ProfileScreen() {
       aspect: [1, 1],
     });
     if (!result.canceled && result.assets[0]?.uri) {
-      setDraft((prev) => ({ ...prev, photoUri: result.assets[0].uri }));
+      setDraft((prev) => {
+        const next = { ...prev, photoUri: result.assets[0].uri };
+        queueSave(next);
+        return next;
+      });
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <TopBar />
+        <TopBar onPressSettings={() => setSettingsOpen(true)} />
 
         <Text style={styles.title}>프로필</Text>
         <Text style={styles.subtitle}>상대의 정보를 차분히 기록해두세요.</Text>
@@ -122,14 +149,12 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <Pressable style={styles.saveButton} onPress={() => void handleSave()}>
-          <Text style={styles.saveText}>저장</Text>
-        </Pressable>
-
         <Pressable style={styles.reportButton} onPress={() => {}}>
           <Text style={styles.reportText}>신고</Text>
         </Pressable>
       </ScrollView>
+
+      <SettingsMenu visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -223,18 +248,6 @@ const styles = StyleSheet.create({
   inputMultiline: {
     height: 80,
     textAlignVertical: 'top',
-  },
-  saveButton: {
-    height: 50,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(232, 202, 191, 0.9)',
-  },
-  saveText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#5d4e45',
   },
   reportButton: {
     height: 48,

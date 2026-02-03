@@ -16,6 +16,7 @@ import {
 
 import BirdCharacter, { type BirdState } from '@/src/components/BirdCharacter';
 import Nest from '@/src/components/Nest';
+import SettingsMenu from '@/src/components/SettingsMenu';
 import TopBar from '@/src/components/TopBar';
 import { useDayRecords } from '@/src/context/day-records-context';
 import type { BirdState as ModelBirdState } from '@/src/models/bird-state';
@@ -68,6 +69,7 @@ export default function HomeScreen() {
   const [mouthOpen, setMouthOpen] = useState(false);
   const [importMessage, setImportMessage] = useState('');
   const [importError, setImportError] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { addOrUpdateToday, records } = useDayRecords();
 
   const eggCrack = useRef(new Animated.Value(0)).current;
@@ -104,6 +106,7 @@ export default function HomeScreen() {
   const learnedToday = todayRecord?.learned ?? false;
   const mappedState = mapBirdStateToVisual(todayRecord?.birdState);
   const visualState = learnedToday ? cycleStates[cycleIndex] : 'healthy';
+  const eggAvailable = eggReady || hasTodayEgg;
 
   useEffect(() => {
     if (!eggJustLaid) return;
@@ -147,7 +150,7 @@ export default function HomeScreen() {
   }, [todayRecord?.learned, todayRecord?.updatedAt, cycleStates.length]);
 
   const openNotepad = () => {
-    if (!eggReady || eggCracking) return;
+    if (!eggAvailable || eggCracking) return;
     setEggCracking(true);
     setShowEggOverlay(true);
     eggOverlayScale.setValue(0.9);
@@ -217,7 +220,7 @@ export default function HomeScreen() {
       setEggJustLaid(true);
       setMouthOpen(false);
       mouthOpenRef.current = false;
-      setEggNotice('?뚯씠 ?앷꼈?댁슂!');
+      setEggNotice('알이 생겼어요!');
       setTimeout(() => setEggNotice(''), 1600);
     });
   };
@@ -373,20 +376,20 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         scrollEnabled={!(feedReady && !feedConsumed)}>
         <View style={styles.roomLayer}>
-          <TopBar style={styles.topBarAdjust} />
+          <TopBar style={styles.topBarAdjust} onPressSettings={() => setSettingsOpen(true)} />
 
           <Pressable
             style={styles.heroArea}
             ref={heroRef}
             onLayout={onHeroLayout}
             pointerEvents="box-none"
-            onPress={eggReady ? openNotepad : undefined}
+            onPress={eggAvailable ? openNotepad : undefined}
             accessibilityRole="button">
             <View style={[styles.sceneWrap, eggJustLaid && styles.sceneWrapPulse]}>
               <View style={styles.nestWrap}>
                 <Nest
                   state={visualState}
-                  showEgg={eggReady}
+                  showEgg={eggAvailable}
                   eggJustLaid={eggJustLaid}
                   onEggPress={openNotepad}
                 />
@@ -442,7 +445,7 @@ export default function HomeScreen() {
 
             <View style={styles.eggRow}>
               <Text style={styles.eggLabel}>
-                {eggReady
+                {eggAvailable
                   ? '오늘의 둥지에 작은 알이 놓였어요.'
                   : '조용히, 무엇이 달라지고 있는지 살펴보세요.'}
               </Text>
@@ -502,6 +505,8 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
       ) : null}
+
+      <SettingsMenu visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </SafeAreaView>
   );
 }

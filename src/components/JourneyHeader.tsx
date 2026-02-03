@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import BirdCharacter, { type BirdState } from '@/src/components/BirdCharacter';
 
@@ -15,40 +15,39 @@ type JourneyHeaderProps = {
 export default function JourneyHeader({ activeIndex, caption, onRewindPress, birdState = 'healthy' }: JourneyHeaderProps) {
   return (
     <View style={styles.card}>
-      <View style={styles.trackWrap}>
-        <View style={styles.labelRow}>
-          {STAGE_LABELS.map((label, index) => (
-            <Text key={label} style={[styles.stageLabel, index <= activeIndex && styles.stageLabelActive]}>
-              {label}
-            </Text>
-          ))}
-        </View>
-        <View style={styles.track}>
-          <View style={[styles.trackFill, { width: `${(activeIndex / (STAGE_LABELS.length - 1)) * 100}%` }]} />
-          <View style={styles.checkpointRow}>
-            {STAGE_LABELS.map((_, index) => (
-              <View
-                key={`checkpoint-${index}`}
-                style={[styles.checkpoint, index <= activeIndex ? styles.checkpointActive : styles.checkpointInactive]}
-              />
-            ))}
-          </View>
-        </View>
-      </View>
-
       <View style={styles.hero}>
-        <View style={styles.heroSky} />
-        <View style={styles.heroHill} />
-        <View style={styles.platformStack}>
-          <View style={[styles.platform, styles.platformTop]} />
-          <View style={[styles.platform, styles.platformMid]} />
-          <View style={[styles.platform, styles.platformBase]} />
-        </View>
-        <View style={styles.heroBirdWrap} pointerEvents="none">
-          <View style={styles.heroBirdScale}>
-            <BirdCharacter state={birdState} />
+        <ImageBackground
+          source={require('@/assets/images/timelinebg.png')}
+          style={styles.heroImage}
+          imageStyle={styles.heroImageInner}
+          resizeMode="cover"
+        >
+          <View style={[styles.trackWrap, styles.trackOverlay]}>
+            <View style={styles.labelRow}>
+              {STAGE_LABELS.map((label, index) => (
+                <Text key={label} style={[styles.stageLabel, index <= activeIndex && styles.stageLabelActive]}>
+                  {label}
+                </Text>
+              ))}
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.trackFill, { width: `${(activeIndex / (STAGE_LABELS.length - 1)) * 100}%` }]} />
+              <View style={styles.checkpointRow}>
+                {STAGE_LABELS.map((_, index) => (
+                  <View
+                    key={`checkpoint-${index}`}
+                    style={[styles.checkpoint, index <= activeIndex ? styles.checkpointActive : styles.checkpointInactive]}
+                  />
+                ))}
+              </View>
+            </View>
           </View>
-        </View>
+          <View style={styles.heroBirdWrap} pointerEvents="none">
+            <View style={styles.heroBirdScale}>
+              <BirdCharacter state={birdState} />
+            </View>
+          </View>
+        </ImageBackground>
       </View>
 
       <View style={styles.captionRow}>
@@ -77,6 +76,12 @@ const styles = StyleSheet.create({
   },
   trackWrap: {
     gap: 8,
+  },
+  trackOverlay: {
+    position: 'absolute',
+    top: 10,
+    left: 12,
+    right: 12,
   },
   labelRow: {
     flexDirection: 'row',
@@ -120,56 +125,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(195, 180, 170, 0.4)',
   },
   hero: {
-    height: 140,
+    height: 170,
     borderRadius: 18,
     backgroundColor: '#f3e7e1',
     overflow: 'hidden',
   },
-  heroSky: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '60%',
-    backgroundColor: 'rgba(242, 228, 220, 0.9)',
+  heroImage: {
+    flex: 1,
   },
-  heroHill: {
-    position: 'absolute',
-    bottom: 0,
-    left: -20,
-    right: -20,
-    height: 70,
-    borderTopLeftRadius: 80,
-    borderTopRightRadius: 80,
-    backgroundColor: 'rgba(227, 210, 197, 0.6)',
-  },
-  platformStack: {
-    position: 'absolute',
-    right: 18,
-    bottom: 18,
-    alignItems: 'center',
-  },
-  platform: {
-    width: 86,
-    height: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(224, 206, 193, 0.9)',
-  },
-  platformTop: {
-    width: 70,
-  },
-  platformMid: {
-    width: 78,
-    marginTop: 4,
-  },
-  platformBase: {
-    width: 86,
-    marginTop: 4,
+  heroImageInner: {
+    borderRadius: 18,
+    transform: [{ scale: 1.08 }, { translateY: 4 }],
   },
   heroBirdWrap: {
     position: 'absolute',
-    right: 18,
-    bottom: 12,
+    right: 20,
+    bottom: 26,
     width: 90,
     height: 90,
     alignItems: 'center',
