@@ -71,7 +71,7 @@ export function DayRecordsProvider({ children }: { children: React.ReactNode }) 
           },
           immediateRiskShown: existing.immediateRiskShown ?? false,
           uploadCount: existing.uploadCount + 1,
-          learned: existing.learned ?? false,
+          learned: false,
           updatedAt: now,
         };
         updated = records.map((record) => (record.date === todayKey ? nextRecord : record));

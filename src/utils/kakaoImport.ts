@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system/legacy';
+﻿import * as FileSystem from 'expo-file-system/legacy';
 import JSZip from 'jszip';
 
 export type ParsedConversation = {
@@ -17,9 +17,9 @@ export type ParsedConversation = {
   messagesCount: number;
 };
 
-const MONEY_KEYWORDS = ['돈', '송금', '입금', '계좌', '대출'];
-const FAVOR_KEYWORDS = ['부탁', '도움', '해줘', '지원'];
-const PRAISE_KEYWORDS = ['사랑', '보고싶', '소중', '최고', '행복'];
+const MONEY_KEYWORDS = ['돈', '송금', '입금', '계좌', '이체'];
+const FAVOR_KEYWORDS = ['부탁', '도와', '도움', '지원'];
+const PRAISE_KEYWORDS = ['사랑', '보고싶', '결혼', '최고', '운명'];
 const IMAGE_KEYWORDS = ['사진', '이미지', '포토'];
 
 function containsAny(text: string, keywords: string[]) {
@@ -50,7 +50,7 @@ function buildParsedConversation(text: string): ParsedConversation {
   if (imageIncluded) tags.push('이미지');
 
   const riskFlagsCount = [moneyRequest, favorRequest, excessivePraise, linkIncluded, imageIncluded].filter(Boolean).length;
-  const summary = messages[0] ?? '오늘의 대화 기록이 준비됐어요.';
+  const summary = messages[0] ?? '오늘의 대화를 기록했어요.';
 
   return {
     messages,

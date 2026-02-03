@@ -57,6 +57,7 @@ export default function HomeScreen() {
   const [showReasons, setShowReasons] = useState(false);
   const [eggCracking, setEggCracking] = useState(false);
   const [showEggOverlay, setShowEggOverlay] = useState(false);
+  const [cycleIndex, setCycleIndex] = useState(0);
   const [importedFile, setImportedFile] = useState<ImportedFile | null>(null);
   const [parsedConversation, setParsedConversation] = useState<ParsedConversation | null>(null);
   const [feedReady, setFeedReady] = useState(false);
@@ -89,6 +90,9 @@ export default function HomeScreen() {
   const mouthCenter = useRef<{ x: number; y: number } | null>(null);
   const feedOrigin = useRef({ x: 0, y: 0 });
   const mouthOpenRef = useRef(false);
+  const lastLearnedAt = useRef<string | undefined>(undefined);
+  const prevLearned = useRef(false);
+  const cycleStates: BirdState[] = ['healthy', 'uneasy', 'distorted', 'critical'];
 
   const birdState = useMemo(() => getBirdState(uploadCount), [uploadCount]);
   const canShowReasonButton = birdState !== 'healthy';
@@ -99,7 +103,7 @@ export default function HomeScreen() {
   );
   const learnedToday = todayRecord?.learned ?? false;
   const mappedState = mapBirdStateToVisual(todayRecord?.birdState);
-  const visualState = mappedState ?? birdState;
+  const visualState = learnedToday ? cycleStates[cycleIndex] : 'healthy';
 
   useEffect(() => {
     if (!eggJustLaid) return;
@@ -116,9 +120,31 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (todayRecord?.learned) {
+      setEggReady(false);
+      setHasTodayEgg(false);
+      setEggJustLaid(false);
+      setFeedVisible(false);
+    } else if (feedConsumed) {
       setFeedVisible(false);
     }
-  }, [todayRecord?.learned]);
+  }, [todayRecord?.learned, feedConsumed]);
+
+  useEffect(() => {
+    if (!todayRecord?.learned) {
+      prevLearned.current = false;
+      return;
+    }
+    if (!prevLearned.current) {
+      prevLearned.current = true;
+      lastLearnedAt.current = todayRecord.updatedAt;
+      setCycleIndex((prev) => (prev + 1) % cycleStates.length);
+      return;
+    }
+    if (todayRecord.updatedAt && todayRecord.updatedAt !== lastLearnedAt.current) {
+      lastLearnedAt.current = todayRecord.updatedAt;
+      setCycleIndex((prev) => (prev + 1) % cycleStates.length);
+    }
+  }, [todayRecord?.learned, todayRecord?.updatedAt, cycleStates.length]);
 
   const openNotepad = () => {
     if (!eggReady || eggCracking) return;
@@ -133,20 +159,20 @@ export default function HomeScreen() {
           toValue: 1,
           duration: 200,
           easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(eggOverlayScale, {
           toValue: 1,
           duration: 240,
           easing: Easing.out(Easing.back(1.4)),
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]),
       Animated.timing(eggCrack, {
         toValue: 1,
         duration: 320,
         easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start(({ finished }) => {
       if (!finished) return;
@@ -160,11 +186,13 @@ export default function HomeScreen() {
   };
 
   const resetFeedCard = () => {
-    Animated.spring(feedPosition, {
-      toValue: { x: feedOrigin.current.x, y: feedOrigin.current.y },
-      useNativeDriver: true,
-      bounciness: 8,
-    }).start();
+    feedPosition.stopAnimation(() => {
+      Animated.spring(feedPosition, {
+        toValue: { x: feedOrigin.current.x, y: feedOrigin.current.y },
+        useNativeDriver: false,
+        bounciness: 8,
+      }).start();
+    });
   };
 
   const handleFeedEaten = () => {
@@ -173,13 +201,13 @@ export default function HomeScreen() {
         toValue: 0.2,
         duration: FEEDING_MS,
         easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(feedOpacity, {
         toValue: 0,
         duration: FEEDING_MS,
         easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start(() => {
       setFeedVisible(false);
@@ -267,6 +295,9 @@ export default function HomeScreen() {
     setImportedFile(null);
     setHasTodayEgg(false);
     setEggNotice('');
+    feedPosition.setValue({ x: 0, y: 0 });
+    feedScale.setValue(1);
+    feedOpacity.setValue(1);
     setIsImporting(true);
     let pickedIsZip = false;
 
@@ -297,20 +328,21 @@ export default function HomeScreen() {
 
       const parsed = await parseKakaoFile(targetUri, file.name);
       setParsedConversation(parsed);
-      setFeedReady(true);
-      setFeedVisible(true);
-      setFeedConsumed(false);
-      setEggReady(false);
-      feedScale.setValue(1);
-      feedOpacity.setValue(1);
-      setImportMessage('오늘의 먹이가 준비됐어요. 새에게 먹여볼까요?');
-
-      void addOrUpdateToday({
+      const updated = await addOrUpdateToday({
         extractedSentences: parsed.messages.slice(0, 3),
         nativeSentences: undefined,
         flags: parsed.flags,
         sourceFileName: file.name,
       });
+      if (updated) {
+        setFeedReady(true);
+        setFeedVisible(true);
+        setFeedConsumed(false);
+        setEggReady(false);
+        feedScale.setValue(1);
+        feedOpacity.setValue(1);
+        setImportMessage('오늘의 먹이가 준비됐어요. 새에게 먹여볼까요?');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : '';
       if (pickedIsZip || message === 'zip_parse_failed') {
@@ -339,7 +371,7 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!feedVisible}>
+        scrollEnabled={!(feedReady && !feedConsumed)}>
         <View style={styles.roomLayer}>
           <View style={styles.topBar}>
             <Pressable style={styles.iconButton} accessibilityRole="button">
@@ -350,7 +382,13 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.heroArea} ref={heroRef} onLayout={onHeroLayout} pointerEvents="box-none">
+          <Pressable
+            style={styles.heroArea}
+            ref={heroRef}
+            onLayout={onHeroLayout}
+            pointerEvents="box-none"
+            onPress={eggReady ? openNotepad : undefined}
+            accessibilityRole="button">
             <View style={[styles.sceneWrap, eggJustLaid && styles.sceneWrapPulse]}>
               <View style={styles.nestWrap}>
                 <Nest
@@ -365,15 +403,17 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {feedReady && feedVisible ? (
+            {feedReady && !feedConsumed ? (
               <Animated.View
                 {...panResponder.panHandlers}
                 style={[
                   styles.feedCard,
                   {
-                    left: feedPosition.x,
-                    top: feedPosition.y,
-                    transform: [{ scale: feedScale }],
+                    transform: [
+                      { translateX: feedPosition.x },
+                      { translateY: feedPosition.y },
+                      { scale: feedScale },
+                    ],
                     opacity: feedOpacity,
                   },
                 ]}>
@@ -391,7 +431,7 @@ export default function HomeScreen() {
                 </View>
               </Animated.View>
             ) : null}
-          </View>
+          </Pressable>
 
           <View style={styles.lowerArea}>
             <Pressable
@@ -415,7 +455,7 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            {canShowReasonButton ? (
+            {canShowReasonButton && learnedToday ? (
               <Pressable
                 style={styles.reasonButton}
                 onPress={() => setShowReasons((prev) => !prev)}
@@ -424,7 +464,7 @@ export default function HomeScreen() {
               </Pressable>
             ) : null}
 
-            {showReasons ? (
+            {showReasons && learnedToday ? (
               <View style={styles.reasonWrap}>
                 <Text style={styles.reasonText}>
                   최근 대화에 반복된 금전 관련 표현, 도움 요청, 외부 링크가 보였어요.
@@ -541,6 +581,8 @@ const styles = StyleSheet.create({
   },
   feedCard: {
     position: 'absolute',
+    left: 0,
+    top: 0,
     width: FEED_CARD_SIZE.width,
     height: FEED_CARD_SIZE.height,
     borderRadius: 18,

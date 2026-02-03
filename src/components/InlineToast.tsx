@@ -16,9 +16,9 @@ export default function InlineToast({ message, visible }: InlineToastProps) {
     }
 
     Animated.sequence([
-      Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0, duration: 220, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: false }),
+      Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: false }),
+      Animated.timing(opacity, { toValue: 0, duration: 220, useNativeDriver: false }),
     ]).start();
   }, [visible, opacity]);
 

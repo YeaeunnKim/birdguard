@@ -64,25 +64,25 @@ export default function Nest({
         toValue: -2,
         duration: 120,
         easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(wobble, {
         toValue: 2,
         duration: 120,
         easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(wobble, {
         toValue: -1,
         duration: 100,
         easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(wobble, {
         toValue: 0,
         duration: 120,
         easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]);
     sequence.start();

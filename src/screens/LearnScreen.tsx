@@ -1,4 +1,4 @@
-import * as Clipboard from 'expo-clipboard';
+﻿import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -56,8 +56,20 @@ export default function LearnScreen({ onCompleted, closeOnComplete = false, insi
     [records, todayKey]
   );
 
-  const sentences = todayRecord?.extractedSentences?.slice(0, 3) ?? [];
-  const nativeSentences = todayRecord?.nativeSentences ?? [];
+  const demoSentences = [
+    '오늘은 조금 천천히 이야기하고 싶어.',
+    '이번만 도와주면 꼭 갚을게.',
+    '사진을 하나만 더 보내줄 수 있어?',
+  ];
+  const demoNativeSentences = [
+    'I want to talk a little more slowly today.',
+    'Could you help me just this once? I will pay you back.',
+    'Could you send just one more photo?',
+  ];
+
+  const useDemo = !todayRecord || (todayRecord.nativeSentences?.length ?? 0) === 0;
+  const sentences = (useDemo ? demoSentences : todayRecord?.extractedSentences ?? []).slice(0, 3);
+  const nativeSentences = useDemo ? demoNativeSentences : todayRecord?.nativeSentences ?? [];
   const learned = todayRecord?.learned ?? false;
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,8 +77,9 @@ export default function LearnScreen({ onCompleted, closeOnComplete = false, insi
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [completeMessage, setCompleteMessage] = useState('');
+  const [carouselWidth, setCarouselWidth] = useState(width - 32);
 
-  const cardWidth = Math.max(280, width - 32);
+  const cardWidth = Math.max(240, carouselWidth);
 
   useEffect(() => {
     if (sentences.length === 0) return;
@@ -95,13 +108,19 @@ export default function LearnScreen({ onCompleted, closeOnComplete = false, insi
   };
 
   const handleComplete = async () => {
-    if (!todayRecord) return;
+    if (!todayRecord) {
+      setCompleteMessage('오늘 학습을 마쳤어요.');
+      if (closeOnComplete) {
+        router.back();
+      }
+      return;
+    }
     const birdState = deriveBirdState(todayRecord);
     const updated = await markLearnedToday(birdState);
     if (!updated) return;
     setCompleteMessage('오늘 학습을 마쳤어요.');
 
-    const summary = todayRecord.extractedSentences?.[0] ?? '오늘의 대화 기록이 남았어요.';
+    const summary = todayRecord.extractedSentences?.[0] ?? '오늘의 대화를 기록했어요.';
     await addEntry({
       id: todayKey,
       date: todayKey,
@@ -120,26 +139,12 @@ export default function LearnScreen({ onCompleted, closeOnComplete = false, insi
     }
   };
 
-  if (!todayRecord) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>오늘 기록이 없어요</Text>
-          <Text style={styles.emptyBody}>홈에서 오늘의 대화를 먼저 새에게 건네주세요.</Text>
-          <Pressable style={styles.homeButton} onPress={() => router.push('/(tabs)')}>
-            <Text style={styles.homeButtonText}>홈으로 가기</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>오늘의 학습</Text>
-          <Text style={styles.subtitle}>{formatDateLabel(todayKey)}</Text>
+          <Text style={styles.subtitle}>{useDemo ? '오늘' : formatDateLabel(todayKey)}</Text>
           <Text style={styles.helper}>상대의 말, 상대의 언어로 다시 말해봐요.</Text>
         </View>
 
@@ -148,27 +153,34 @@ export default function LearnScreen({ onCompleted, closeOnComplete = false, insi
           <ProgressDots total={sentences.length} currentIndex={currentIndex} />
         </View>
 
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(event) => {
-            const nextIndex = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
-            setCurrentIndex(nextIndex);
-            setViewed((prev) => (prev.includes(nextIndex) ? prev : [...prev, nextIndex]));
-          }}
-          contentContainerStyle={styles.carousel}>
-          {sentences.map((sentence, index) => (
-            <View key={`${sentence}-${index}`} style={[styles.cardWrap, { width: cardWidth }]}>
-              <LearnCard
-                korean={sentence}
-                nativeText={translate(sentence, index)}
-                onCopy={() => void handleCopy(translate(sentence, index))}
-              />
-            </View>
-          ))}
-        </ScrollView>
+        <View
+          style={styles.carouselWrap}
+          onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            scrollEnabled={sentences.length > 1}
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={cardWidth}
+            decelerationRate="fast"
+            onMomentumScrollEnd={(event) => {
+              const nextIndex = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
+              setCurrentIndex(nextIndex);
+              setViewed((prev) => (prev.includes(nextIndex) ? prev : [...prev, nextIndex]));
+            }}
+            contentContainerStyle={styles.carousel}>
+            {sentences.map((sentence, index) => (
+              <View key={`${sentence}-${index}`} style={[styles.cardWrap, { width: cardWidth }]}>
+                <LearnCard
+                  korean={sentence}
+                  nativeText={translate(sentence, index)}
+                  onCopy={() => void handleCopy(translate(sentence, index))}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
 
         <InlineToast message={toastMessage} visible={toastVisible} />
 
@@ -178,7 +190,7 @@ export default function LearnScreen({ onCompleted, closeOnComplete = false, insi
           style={[styles.completeButton, (!canComplete || learned) && styles.completeButtonDisabled]}
           onPress={() => void handleComplete()}
           disabled={!canComplete || learned}>
-          <Text style={styles.completeText}>{learned ? '완료됨' : '학습 완료'}</Text>
+          <Text style={styles.completeText}>{learned ? '완료됨' : '오늘 학습 완료'}</Text>
         </Pressable>
 
         {completeMessage ? <Text style={styles.completeMessage}>{completeMessage}</Text> : null}
@@ -196,6 +208,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 12,
+    paddingBottom: 18,
     gap: 12,
   },
   header: {
@@ -226,9 +239,13 @@ const styles = StyleSheet.create({
   },
   carousel: {
     paddingVertical: 8,
+    paddingBottom: 4,
+  },
+  carouselWrap: {
+    width: '100%',
   },
   cardWrap: {
-    paddingRight: 12,
+    paddingHorizontal: 0,
   },
   completeButton: {
     height: 52,
@@ -236,6 +253,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(232, 202, 191, 0.9)',
+    marginTop: 6,
   },
   completeButtonDisabled: {
     opacity: 0.6,
@@ -253,34 +271,5 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#f7eeea',
     padding: 12,
-  },
-  emptyWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#5f5147',
-  },
-  emptyBody: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: '#807167',
-    textAlign: 'center',
-  },
-  homeButton: {
-    marginTop: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 16,
-    backgroundColor: 'rgba(232, 202, 191, 0.9)',
-  },
-  homeButtonText: {
-    fontSize: 14,
-    color: '#5d4e45',
   },
 });

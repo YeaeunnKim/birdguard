@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+﻿import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -30,7 +30,7 @@ export default function LearnNotepadModal() {
     <View>
       <Text style={styles.insightTitle}>오늘의 분석</Text>
       {insightLines.length === 0 ? (
-        <Text style={styles.insightBody}>오늘은 특별한 징후 없이 대화가 진행됐어요.</Text>
+        <Text style={styles.insightBody}>오늘은 특별한 징후 없이 조용히 흘러갔어요.</Text>
       ) : (
         <View style={styles.insightList}>
           {insightLines.map((line) => (
@@ -53,7 +53,9 @@ export default function LearnNotepadModal() {
             <Text style={styles.closeText}>닫기</Text>
           </Pressable>
         </View>
-        <LearnScreen closeOnComplete insightContent={insightContent} />
+        <View style={styles.content}>
+          <LearnScreen closeOnComplete insightContent={insightContent} />
+        </View>
       </View>
     </View>
   );
@@ -63,14 +65,22 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'center',
-    padding: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 24,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   notepad: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 520,
     borderRadius: 26,
     backgroundColor: '#f8f0eb',
     overflow: 'hidden',
-    maxHeight: '92%',
+    height: '82%',
+    minHeight: 420,
+  },
+  content: {
+    flex: 1,
   },
   notepadHeader: {
     height: 36,
