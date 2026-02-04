@@ -2,14 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type AuthUser = {
   id: string;
-  name: string;
-  email: string;
+  username: string;
 };
 
 export type AuthCredentials = {
   id: string;
-  name: string;
-  email: string;
+  username: string;
   password: string;
 };
 

@@ -55,7 +55,7 @@ export default function SettingsMenu({ visible, onClose }: SettingsMenuProps) {
 
   const handleProfile = () => {
     onClose();
-    router.push('/(tabs)/profile');
+    router.push('/(tabs)/profile/edit');
   };
 
   const handleLogout = async () => {

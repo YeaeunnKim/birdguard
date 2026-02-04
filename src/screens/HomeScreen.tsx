@@ -537,6 +537,7 @@ const styles = StyleSheet.create({
   },
   topBarAdjust: {
     marginHorizontal: -14,
+    marginTop: -14,
   },
   iconButton: {
     width: 34,

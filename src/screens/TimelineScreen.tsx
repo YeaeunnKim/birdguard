@@ -262,7 +262,7 @@ export default function TimelineScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerWrap}>
-            <TopBar title="타임라인" onPressSettings={() => setSettingsOpen(true)} />
+            <TopBar onPressSettings={() => setSettingsOpen(true)} />
 
             <JourneyHeader activeIndex={stageIndex} birdState="healthy" onRewindPress={() => { /* TODO: rewind modal */ }} />
 

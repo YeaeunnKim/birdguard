@@ -16,8 +16,8 @@ import { useAuth } from '@/src/context/auth-context';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
+  const { signIn, signInAsGuest } = useAuth();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,7 +26,7 @@ export default function LoginScreen() {
     if (isSubmitting) return;
     setError('');
     setIsSubmitting(true);
-    const result = await signIn(email, password);
+    const result = await signIn(username, password);
     if (!result.ok) {
       setError(result.message ?? '로그인에 실패했어요.');
     }
@@ -43,17 +43,16 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>이메일</Text>
+            <Text style={styles.label}>아이디</Text>
             <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="example@email.com"
+              value={username}
+              onChangeText={setUsername}
+              placeholder="아이디"
               placeholderTextColor="#b1a39a"
-              keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="off"
-              textContentType="none"
+              textContentType="username"
               importantForAutofill="no"
               selectionColor="#c9b7a8"
               style={styles.input}
@@ -86,6 +85,13 @@ export default function LoginScreen() {
 
             <Pressable onPress={() => router.push('/(auth)/signup')} style={styles.linkButton}>
               <Text style={styles.linkText}>회원가입</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => void signInAsGuest()}
+              style={styles.testButton}
+              accessibilityRole="button">
+              <Text style={styles.testButtonText}>테스트로 바로 들어가기</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -169,5 +175,13 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 13,
     color: '#8b7a6f',
+  },
+  testButton: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+  },
+  testButtonText: {
+    fontSize: 12,
+    color: '#a2948a',
   },
 });

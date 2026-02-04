@@ -17,8 +17,7 @@ import { useAuth } from '@/src/context/auth-context';
 export default function SignupScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
@@ -32,9 +31,11 @@ export default function SignupScreen() {
       return;
     }
     setIsSubmitting(true);
-    const result = await signUp(name, email, password);
+    const result = await signUp(username, password);
     if (!result.ok) {
       setError(result.message ?? '회원가입에 실패했어요.');
+    } else {
+      router.replace('/(auth)/login');
     }
     setIsSubmitting(false);
   };
@@ -49,31 +50,15 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>이름</Text>
+            <Text style={styles.label}>아이디</Text>
             <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="이름"
+              value={username}
+              onChangeText={setUsername}
+              placeholder="아이디"
               placeholderTextColor="#b1a39a"
               autoCorrect={false}
               autoComplete="off"
-              textContentType="none"
-              importantForAutofill="no"
-              selectionColor="#c9b7a8"
-              style={styles.input}
-            />
-
-            <Text style={styles.label}>이메일</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="example@email.com"
-              placeholderTextColor="#b1a39a"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="off"
-              textContentType="none"
+              textContentType="username"
               importantForAutofill="no"
               selectionColor="#c9b7a8"
               style={styles.input}
@@ -89,7 +74,7 @@ export default function SignupScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="off"
-              textContentType="none"
+              textContentType="password"
               importantForAutofill="no"
               selectionColor="#c9b7a8"
               style={styles.input}
@@ -105,7 +90,7 @@ export default function SignupScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="off"
-              textContentType="none"
+              textContentType="password"
               importantForAutofill="no"
               selectionColor="#c9b7a8"
               style={styles.input}

@@ -11,15 +11,16 @@ type AuthResult = {
 type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<AuthResult>;
-  signUp: (name: string, email: string, password: string) => Promise<AuthResult>;
+  signIn: (username: string, password: string) => Promise<AuthResult>;
+  signUp: (username: string, password: string) => Promise<AuthResult>;
+  signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+function normalizeUsername(username: string) {
+  return username.trim();
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -35,38 +36,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void load();
   }, []);
 
-  const signUp = useCallback(async (name: string, email: string, password: string): Promise<AuthResult> => {
-    const safeEmail = normalizeEmail(email);
-    if (!name.trim() || !safeEmail || !password) {
+  const signUp = useCallback(async (username: string, password: string): Promise<AuthResult> => {
+    const safeUsername = normalizeUsername(username);
+    if (!safeUsername || !password) {
       return { ok: false, message: '모든 항목을 채워주세요.' };
     }
     const id = `user_${Date.now()}`;
     const cred: AuthCredentials = {
       id,
-      name: name.trim(),
-      email: safeEmail,
+      username: safeUsername,
       password,
     };
-    const nextUser: AuthUser = { id, name: name.trim(), email: safeEmail };
     await saveAuthCredentials(cred);
+    return { ok: true };
+  }, []);
+
+  const signIn = useCallback(async (username: string, password: string): Promise<AuthResult> => {
+    const safeUsername = normalizeUsername(username);
+    const stored = await loadAuthCredentials();
+    if (!stored) {
+      return { ok: false, message: '먼저 회원가입이 필요해요.' };
+    }
+    if (stored.username !== safeUsername || stored.password !== password) {
+      return { ok: false, message: '아이디 또는 비밀번호가 맞지 않아요.' };
+    }
+    const nextUser: AuthUser = { id: stored.id, username: stored.username };
     await saveAuthUser(nextUser);
     setUser(nextUser);
     return { ok: true };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
-    const safeEmail = normalizeEmail(email);
-    const stored = await loadAuthCredentials();
-    if (!stored) {
-      return { ok: false, message: '먼저 회원가입이 필요해요.' };
-    }
-    if (stored.email !== safeEmail || stored.password !== password) {
-      return { ok: false, message: '이메일 또는 비밀번호가 맞지 않아요.' };
-    }
-    const nextUser: AuthUser = { id: stored.id, name: stored.name, email: stored.email };
+  const signInAsGuest = useCallback(async () => {
+    const nextUser: AuthUser = { id: `guest_${Date.now()}`, username: '테스트' };
     await saveAuthUser(nextUser);
     setUser(nextUser);
-    return { ok: true };
   }, []);
 
   const signOut = useCallback(async () => {
@@ -80,9 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       signIn,
       signUp,
+      signInAsGuest,
       signOut,
     }),
-    [user, isLoading, signIn, signUp, signOut]
+    [user, isLoading, signIn, signUp, signInAsGuest, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

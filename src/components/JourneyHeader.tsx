@@ -13,8 +13,20 @@ type JourneyHeaderProps = {
 };
 
 export default function JourneyHeader({ activeIndex, caption, onRewindPress, birdState = 'healthy' }: JourneyHeaderProps) {
+  const [debugOpen, setDebugOpen] = React.useState(false);
+  const [debugIndex, setDebugIndex] = React.useState<number | null>(null);
+  const maxIndex = STAGE_LABELS.length - 1;
+  const resolvedIndex = Math.max(0, Math.min(debugIndex ?? activeIndex, maxIndex));
+  const progressRatio = maxIndex <= 0 ? 0 : resolvedIndex / maxIndex;
+
   return (
     <View style={styles.card}>
+      <Pressable
+        style={styles.debugButton}
+        onPress={() => setDebugOpen(true)}
+        accessibilityRole="button">
+        <Text style={styles.debugButtonText}>디버그</Text>
+      </Pressable>
       <View style={styles.hero}>
         <ImageBackground
           source={require('@/assets/images/timelinebg.png')}
@@ -24,24 +36,37 @@ export default function JourneyHeader({ activeIndex, caption, onRewindPress, bir
         >
           <View style={[styles.trackWrap, styles.trackOverlay]}>
             <View style={styles.labelRow}>
-              {STAGE_LABELS.map((label, index) => (
-                <Text key={label} style={[styles.stageLabel, index <= activeIndex && styles.stageLabelActive]}>
-                  {label}
-                </Text>
-              ))}
-            </View>
-            <View style={styles.track}>
-              <View style={[styles.trackFill, { width: `${(activeIndex / (STAGE_LABELS.length - 1)) * 100}%` }]} />
-              <View style={styles.checkpointRow}>
-                {STAGE_LABELS.map((_, index) => (
-                  <View
-                    key={`checkpoint-${index}`}
-                    style={[styles.checkpoint, index <= activeIndex ? styles.checkpointActive : styles.checkpointInactive]}
-                  />
-                ))}
+          {STAGE_LABELS.map((label, index) => (
+            <Text
+              key={label}
+              style={[
+                styles.stageLabel,
+                index > resolvedIndex && styles.stageLabelHidden,
+                index < resolvedIndex && styles.stageLabelCompleted,
+                index === resolvedIndex && styles.stageLabelActive,
+              ]}>
+              {label}
+            </Text>
+          ))}
+        </View>
+        <View style={styles.track}>
+          <View style={[styles.trackFill, { width: `${progressRatio * 100}%` }]} />
+          <View style={styles.checkpointRow}>
+            {STAGE_LABELS.map((_, index) => (
+              <View
+                key={`checkpoint-${index}`}
+                style={[
+                  styles.checkpoint,
+                  index > resolvedIndex && styles.checkpointHidden,
+                  index < resolvedIndex && styles.checkpointCompleted,
+                  index === resolvedIndex ? styles.checkpointActive : styles.checkpointInactive,
+                ]}>
+                <View style={styles.checkpointCore} />
               </View>
-            </View>
+            ))}
           </View>
+        </View>
+      </View>
           <View style={styles.heroBirdWrap} pointerEvents="none">
             <View style={styles.heroBirdScale}>
               <BirdCharacter state={birdState} />
@@ -58,6 +83,42 @@ export default function JourneyHeader({ activeIndex, caption, onRewindPress, bir
           </Pressable>
         ) : null}
       </View>
+      {debugOpen ? (
+        <View style={styles.debugOverlay}>
+          <Pressable style={styles.debugBackdrop} onPress={() => setDebugOpen(false)} />
+          <View style={styles.debugSheet}>
+            <Text style={styles.debugTitle}>단계 선택</Text>
+            {STAGE_LABELS.map((label, index) => (
+              <Pressable
+                key={label}
+                style={[
+                  styles.debugOption,
+                  index === resolvedIndex && styles.debugOptionActive,
+                ]}
+                onPress={() => {
+                  setDebugIndex(index);
+                  setDebugOpen(false);
+                }}>
+                <Text
+                  style={[
+                    styles.debugOptionText,
+                    index === resolvedIndex && styles.debugOptionTextActive,
+                  ]}>
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
+            <Pressable
+              style={styles.debugClear}
+              onPress={() => {
+                setDebugIndex(null);
+                setDebugOpen(false);
+              }}>
+              <Text style={styles.debugClearText}>자동으로 돌아가기</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -91,6 +152,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#b1a39a',
   },
+  stageLabelHidden: {
+    opacity: 0,
+  },
+  stageLabelCompleted: {
+    color: '#9a8b80',
+    fontWeight: '500',
+  },
   stageLabelActive: {
     color: '#7f7065',
     fontWeight: '600',
@@ -116,10 +184,95 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: 'rgba(195, 180, 170, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkpointHidden: {
+    opacity: 0,
+  },
+  checkpointCore: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   checkpointActive: {
     backgroundColor: '#cfae9b',
     transform: [{ scale: 1.05 }],
+  },
+  checkpointCompleted: {
+    backgroundColor: 'rgba(201, 174, 155, 0.75)',
+  },
+  debugButton: {
+    position: 'absolute',
+    left: 12,
+    top: -18,
+    zIndex: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  debugButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#7b6c62',
+  },
+  debugOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  debugBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(50, 40, 32, 0.25)',
+  },
+  debugSheet: {
+    width: '86%',
+    borderRadius: 16,
+    backgroundColor: '#f7eeea',
+    padding: 16,
+    gap: 8,
+  },
+  debugTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#5f5147',
+    marginBottom: 4,
+  },
+  debugOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  debugOptionActive: {
+    backgroundColor: 'rgba(232, 202, 191, 0.9)',
+  },
+  debugOptionText: {
+    fontSize: 13,
+    color: '#6f5f55',
+  },
+  debugOptionTextActive: {
+    fontWeight: '600',
+    color: '#5d4e45',
+  },
+  debugClear: {
+    paddingVertical: 8,
+    alignSelf: 'flex-end',
+  },
+  debugClearText: {
+    fontSize: 12,
+    color: '#8b7a6f',
   },
   checkpointInactive: {
     backgroundColor: 'rgba(195, 180, 170, 0.4)',

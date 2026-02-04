@@ -1,19 +1,20 @@
 ﻿import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 
 type TopBarProps = {
-  title?: string;
   style?: ViewStyle;
   onPressSettings?: () => void;
   onPressNotifications?: () => void;
 };
 
-export default function TopBar({ title, style, onPressSettings, onPressNotifications }: TopBarProps) {
+const logoSource = require('@/assets/images/logo.png');
+
+export default function TopBar({ style, onPressSettings, onPressNotifications }: TopBarProps) {
   return (
     <View style={[styles.container, style]}>
       <View style={styles.sideSpacer} />
-      <Text style={styles.title}>{title ?? ''}</Text>
+      <Image source={logoSource} style={styles.logo} resizeMode="contain" />
       <View style={styles.iconRow}>
         <Pressable
           style={styles.iconButton}
@@ -34,18 +35,17 @@ export default function TopBar({ title, style, onPressSettings, onPressNotificat
 
 const styles = StyleSheet.create({
   container: {
-    height: 42,
+    height: 72,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   sideSpacer: {
-    width: 64,
+    width: 80,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#5f5147',
+  logo: {
+    width: 170,
+    height: 60,
   },
   iconRow: {
     flexDirection: 'row',
